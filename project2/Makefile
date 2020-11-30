@@ -1,5 +1,5 @@
-main: main.o 
-	g++ main.o directMap.o setAssociative.o setAssocNoAlloc.o prefetch.o prefetchMiss.o -o main
+cache-sim: main.o 
+	g++ main.o directMap.o setAssociative.o setAssocNoAlloc.o prefetch.o prefetchMiss.o -o cache-sim
 
 main.o: main.cpp directMap.o setAssociative.o setAssocNoAlloc.o prefetch.o prefetchMiss.o
 	g++ -c main.cpp
@@ -20,4 +20,4 @@ prefetchMiss.o: prefetchMiss.cpp prefetchMiss.h setAssociative.h
 	g++ -c prefetchMiss.cpp
 
 clean:
-	rm *.o main
+	rm *.o cache-sim

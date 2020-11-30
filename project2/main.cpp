@@ -8,14 +8,16 @@
 #include "prefetch.h"
 #include "prefetchMiss.h"
 
-int main(){
+int main(int argc, char *argv[]){
 
-    std::ifstream infile("../traces/trace1.txt");
+    std::ifstream infile(argv[1]);
+    std::ofstream outfile(argv[2]);
 
     std::string instructionType;
     unsigned long long addr;
 
-
+    //DirectMap Set up
+    #pragma region
     //1KB DirectMap set up
     #pragma region
     unsigned long long* cache1KB = new unsigned long long[32];
@@ -47,50 +49,10 @@ int main(){
     int cacheRequests32KB = 0;
     int val32KB = 0;
     #pragma endregion
+    #pragma endregion
 
-    while (infile >> instructionType >> std::hex >> addr){
-        
-        //1KB DirectMap
-        #pragma region 
-        val1KB = directMap(instructionType, cache1KB, 1024, addr);
-        cacheHits1KB += val1KB;
-        cacheRequests1KB++;
-        #pragma endregion
-
-        //4KB DirectMap
-        #pragma region
-        val4KB = directMap(instructionType, cache4KB, 4096, addr);
-        cacheHits4KB += val4KB;
-        cacheRequests4KB++;
-        #pragma endregion
-
-        //16KB DirectMap
-        #pragma region
-        val16KB = directMap(instructionType, cache16KB, 16384, addr);
-        cacheHits16KB += val16KB;
-        cacheRequests16KB++;
-        #pragma endregion
-
-        //32KB DirectMap
-        #pragma region
-        val32KB = directMap(instructionType, cache32KB, 32768, addr);
-        cacheHits32KB += val32KB;
-        cacheRequests32KB++;
-        #pragma endregion
-
-    }
-
-    infile.close();
-
-    std::cout << cacheHits1KB << "," << cacheRequests1KB << "; ";
-    std::cout << cacheHits4KB << "," << cacheRequests4KB << "; ";
-    std::cout << cacheHits16KB << "," << cacheRequests16KB << "; ";
-    std::cout << cacheHits32KB << "," << cacheRequests32KB << "; " << std::endl;
-
-    //int setAssociative(unsigned long long** cache, int cacheSize, unsigned long long addr, int associativity);
-
-    infile.open("../traces/trace1.txt");
-
+    //Set Assoc and Full Assoc
+    #pragma region
     //2 way Assoc set up
     #pragma region
     unsigned long long** cache2 = new unsigned long long *[16384/2];
@@ -135,34 +97,10 @@ int main(){
     }
     int cacheHitsFullwaySet = 0;
     #pragma endregion
-
-
-    while (infile >> instructionType >> std::hex >> addr){
-        
-        cacheHits2waySet += setAssociative(cache2, 16384/2, addr, 2);
-        cacheHits4waySet += setAssociative(cache4, 16384/4, addr, 4);
-        cacheHits8waySet += setAssociative(cache8, 16384/8, addr, 8);
-        cacheHits16waySet += setAssociative(cache16, 16384/16, addr, 16);
-
-        //using set associative algo for full associative question
-        cacheHitsFullwaySet += setAssociative(cacheFull, 32, addr, 16384/32);
-    }
-
-    std::cout << cacheHits2waySet << "," << cacheRequests1KB << "; ";//<< std::endl;
-    std::cout << cacheHits4waySet << "," << cacheRequests1KB << "; ";// << std::endl;
-    std::cout << cacheHits8waySet << "," << cacheRequests1KB << "; ";
-    std::cout << cacheHits16waySet << "," << cacheRequests1KB << ";" << std::endl;
-
-    std::cout << cacheHitsFullwaySet << "," << cacheRequests1KB<< ";" << std::endl;
-    std::cout << 0 << "," << cacheRequests1KB<< ";" << std::endl; //hot and cold place holder
-
-
-    infile.close();
-
+    #pragma endregion
 
     //no alloc on write miss
-    infile.open("../traces/trace1.txt");
-
+    #pragma region
     //2 way Assoc set up
     #pragma region
     unsigned long long** cache2NA = new unsigned long long *[16384/2];
@@ -198,27 +136,10 @@ int main(){
     }
     int cacheHits16waySetNA = 0;
     #pragma endregion
+    #pragma endregion
 
-    
-    while (infile >> instructionType >> std::hex >> addr){
-        
-        cacheHits2waySetNA += setAssocNoAlloc(instructionType, cache2NA, 16384/2, addr, 2);
-        cacheHits4waySetNA += setAssocNoAlloc(instructionType, cache4NA, 16384/4, addr, 4);
-        cacheHits8waySetNA += setAssocNoAlloc(instructionType, cache8NA, 16384/8, addr, 8);
-        cacheHits16waySetNA += setAssocNoAlloc(instructionType, cache16NA, 16384/16, addr, 16);
-
-    }
-
-    std::cout << cacheHits2waySetNA << "," << cacheRequests1KB << "; ";//<< std::endl;
-    std::cout << cacheHits4waySetNA << "," << cacheRequests1KB << "; ";// << std::endl;
-    std::cout << cacheHits8waySetNA << "," << cacheRequests1KB << "; ";
-    std::cout << cacheHits16waySetNA << "," << cacheRequests1KB << ";" << std::endl;
-
-    infile.close();
-
-
-    infile.open("../traces/trace1.txt");
-
+    //prefetch 
+    #pragma region 
     //2 way Assoc set up
     #pragma region
     unsigned long long** cache2P = new unsigned long long *[16384/2];
@@ -254,27 +175,10 @@ int main(){
     }
     int cacheHits16waySetP = 0;
     #pragma endregion
+    #pragma endregion
 
-    while (infile >> instructionType >> std::hex >> addr){
-        
-        cacheHits2waySetP += prefetch(cache2P, 16384/2, addr, 2);
-        cacheHits4waySetP += prefetch(cache4P, 16384/4, addr, 4);
-        cacheHits8waySetP += prefetch(cache8P, 16384/8, addr, 8);
-        cacheHits16waySetP += prefetch(cache16P, 16384/16, addr, 16);
-
-    }
-
-    std::cout << cacheHits2waySetP << "," << cacheRequests1KB << "; ";//<< std::endl;
-    std::cout << cacheHits4waySetP << "," << cacheRequests1KB << "; ";// << std::endl;
-    std::cout << cacheHits8waySetP << "," << cacheRequests1KB << "; ";
-    std::cout << cacheHits16waySetP << "," << cacheRequests1KB << ";" << std::endl;
-
-    infile.close();
-
-
-
-    infile.open("../traces/trace1.txt");
-
+    //prefetch miss
+    #pragma region 
     //2 way Assoc set up
     #pragma region
     unsigned long long** cache2PM = new unsigned long long *[16384/2];
@@ -310,23 +214,111 @@ int main(){
     }
     int cacheHits16waySetPM = 0;
     #pragma endregion
+    #pragma endregion
+
 
     while (infile >> instructionType >> std::hex >> addr){
         
+        //Direct Map
+        #pragma region
+        //1KB DirectMap
+        #pragma region 
+        val1KB = directMap(instructionType, cache1KB, 1024, addr);
+        cacheHits1KB += val1KB;
+        cacheRequests1KB++;
+        #pragma endregion
+
+        //4KB DirectMap
+        #pragma region
+        val4KB = directMap(instructionType, cache4KB, 4096, addr);
+        cacheHits4KB += val4KB;
+        cacheRequests4KB++;
+        #pragma endregion
+
+        //16KB DirectMap
+        #pragma region
+        val16KB = directMap(instructionType, cache16KB, 16384, addr);
+        cacheHits16KB += val16KB;
+        cacheRequests16KB++;
+        #pragma endregion
+
+        //32KB DirectMap
+        #pragma region
+        val32KB = directMap(instructionType, cache32KB, 32768, addr);
+        cacheHits32KB += val32KB;
+        cacheRequests32KB++;
+        #pragma endregion
+        #pragma endregion
+
+        //set assoc and full assoc
+        #pragma region
+        cacheHits2waySet += setAssociative(cache2, 16384/2, addr, 2);
+        cacheHits4waySet += setAssociative(cache4, 16384/4, addr, 4);
+        cacheHits8waySet += setAssociative(cache8, 16384/8, addr, 8);
+        cacheHits16waySet += setAssociative(cache16, 16384/16, addr, 16);
+
+        //using set associative algo for full associative question
+        cacheHitsFullwaySet += setAssociative(cacheFull, 32, addr, 16384/32);
+        #pragma endregion
+
+        //no alloc write on miss
+        #pragma region
+        cacheHits2waySetNA += setAssocNoAlloc(instructionType, cache2NA, 16384/2, addr, 2);
+        cacheHits4waySetNA += setAssocNoAlloc(instructionType, cache4NA, 16384/4, addr, 4);
+        cacheHits8waySetNA += setAssocNoAlloc(instructionType, cache8NA, 16384/8, addr, 8);
+        cacheHits16waySetNA += setAssocNoAlloc(instructionType, cache16NA, 16384/16, addr, 16);
+        #pragma endregion
+
+        //prefetch
+        #pragma region 
+        cacheHits2waySetP += prefetch(cache2P, 16384/2, addr, 2);
+        cacheHits4waySetP += prefetch(cache4P, 16384/4, addr, 4);
+        cacheHits8waySetP += prefetch(cache8P, 16384/8, addr, 8);
+        cacheHits16waySetP += prefetch(cache16P, 16384/16, addr, 16);
+        #pragma endregion
+
+        //prefetch miss
+        #pragma region
         cacheHits2waySetPM += prefetchMiss(cache2PM, 16384/2, addr, 2);
         cacheHits4waySetPM += prefetchMiss(cache4PM, 16384/4, addr, 4);
         cacheHits8waySetPM += prefetchMiss(cache8PM, 16384/8, addr, 8);
         cacheHits16waySetPM += prefetchMiss(cache16PM, 16384/16, addr, 16);
-
+        #pragma endregion
     }
-
-    std::cout << cacheHits2waySetPM << "," << cacheRequests1KB << "; ";//<< std::endl;
-    std::cout << cacheHits4waySetPM << "," << cacheRequests1KB << "; ";// << std::endl;
-    std::cout << cacheHits8waySetPM << "," << cacheRequests1KB << "; ";
-    std::cout << cacheHits16waySetPM << "," << cacheRequests1KB << ";" << std::endl;
 
     infile.close();
 
+    outfile << cacheHits1KB << "," << cacheRequests1KB << "; ";
+    outfile << cacheHits4KB << "," << cacheRequests4KB << "; ";
+    outfile << cacheHits16KB << "," << cacheRequests16KB << "; ";
+    outfile << cacheHits32KB << "," << cacheRequests32KB << "; " << std::endl;
+
+    outfile << cacheHits2waySet << "," << cacheRequests1KB << "; ";//<< std::endl;
+    outfile << cacheHits4waySet << "," << cacheRequests1KB << "; ";// << std::endl;
+    outfile << cacheHits8waySet << "," << cacheRequests1KB << "; ";
+    outfile << cacheHits16waySet << "," << cacheRequests1KB << ";" << std::endl;
+
+
+    outfile << cacheHitsFullwaySet << "," << cacheRequests1KB<< ";" << std::endl;
+    outfile << 0 << "," << cacheRequests1KB<< ";" << std::endl; //hot and cold place holder
+
+
+    outfile << cacheHits2waySetNA << "," << cacheRequests1KB << "; ";//<< std::endl;
+    outfile << cacheHits4waySetNA << "," << cacheRequests1KB << "; ";// << std::endl;
+    outfile << cacheHits8waySetNA << "," << cacheRequests1KB << "; ";
+    outfile << cacheHits16waySetNA << "," << cacheRequests1KB << ";" << std::endl;
+
+
+    outfile << cacheHits2waySetP << "," << cacheRequests1KB << "; ";//<< std::endl;
+    outfile << cacheHits4waySetP << "," << cacheRequests1KB << "; ";// << std::endl;
+    outfile << cacheHits8waySetP << "," << cacheRequests1KB << "; ";
+    outfile << cacheHits16waySetP << "," << cacheRequests1KB << ";" << std::endl;
+
+
+    outfile << cacheHits2waySetPM << "," << cacheRequests1KB << "; ";//<< std::endl;
+    outfile << cacheHits4waySetPM << "," << cacheRequests1KB << "; ";// << std::endl;
+    outfile << cacheHits8waySetPM << "," << cacheRequests1KB << "; ";
+    outfile << cacheHits16waySetPM << "," << cacheRequests1KB << ";" << std::endl;
 
     return 0;
 }
